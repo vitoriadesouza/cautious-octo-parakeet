@@ -1,1 +1,0 @@
-Caro professor Fábio, você é muito querido, estou te observando. Não falte o treino de peito na segunda antes das 8 da manhã na academia na frente do IF.

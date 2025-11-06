@@ -1,9 +1,14 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import { is_authenticated } from './plugins/axios'
+import { useMoviesStore } from './stores/tmdb'
+
 
 is_authenticated()
+const movies_store = useMoviesStore()
+console.log(movies_store.fetchPopularMovies())
 </script>
+
 
 <template
 </template>

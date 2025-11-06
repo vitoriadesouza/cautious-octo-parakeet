@@ -13,7 +13,7 @@ export async function is_authenticated() {
   try {
     const response = await api.get("/authentication")
     if (response.status === 200) {
-      return { message: true }
+      return { message: `Você está autenticado` }
     }
   } catch (error) {
     console.error("Erro de autenticação:", error.response?.data || error.message)

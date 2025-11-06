@@ -9,9 +9,9 @@ export const api = axios.create({
   },
 })
 
-async function is_authenticated() {
+export async function is_authenticated() {
   try {
-    const response = await api.get("/authentication") 
+    const response = await api.get("/authentication")
     if (response.status === 200) {
       return { message: true }
     }
@@ -21,4 +21,9 @@ async function is_authenticated() {
   return { message: false }
 }
 
-console.log(is_authenticated())
+(async () => {
+  const result = await is_authenticated()
+  console.log(result)
+})()
+
+

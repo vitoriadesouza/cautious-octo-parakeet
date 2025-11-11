@@ -28,7 +28,7 @@ export const useMoviesStore = defineStore('movies', {
       this.loading = true
       this.error = null
       try {
-        const res = await api.get(`${BASE_URL}/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc`, {
+        const res = await api.get(`${BASE_URL}/discover/movie?include_adult=true&include_video=false&language=en-US&page=1&sort_by=popularity.desc`, {
           params: { api_key: API_KEY, language: 'pt-BR', page },
         })
         console.log(res.data)
@@ -47,9 +47,10 @@ export const useMoviesStore = defineStore('movies', {
       this.loading = true
       this.error = null
       try {
-        const res = await api.get(`${BASE_URL}/tv/popular`, {
+        const res = await api.get(`${BASE_URL}/discover/tv?include_adult=false&include_null_first_air_dates=false&language=en-US&page=1&sort_by=popularity.desc'`, {
           params: { api_key: API_KEY, language: 'pt-BR', page },
         })
+        console.log("Séries", res.data)
         if (page === 1) this.series = res.data.results
         else this.series.push(...res.data.results)
         this.page = res.data.page

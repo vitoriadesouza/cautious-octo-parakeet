@@ -7,6 +7,8 @@ import { useMoviesStore } from './stores/tmdb'
 is_authenticated()
 const movies_store = useMoviesStore()
 console.log(movies_store.fetchPopularMovies())
+console.log(movies_store.fetchPopularSeries())
+
 </script>
 
 

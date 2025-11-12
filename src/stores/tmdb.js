@@ -28,12 +28,20 @@ export const useMoviesStore = defineStore('movies', {
       this.loading = true
       this.error = null
       try {
-        const res = await api.get(`${BASE_URL}/discover/movie?include_adult=true&include_video=false&language=en-US&page=1&sort_by=popularity.desc`, {
-          params: { api_key: API_KEY, language: 'pt-BR', page },
+        const res = await api.get(`${BASE_URL}/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc`, {
+          params: {
+            api_key: API_KEY,
+            language: 'pt-BR',
+            include_adult: true,
+            include_video: false,
+            sort_by: 'popularity.desc',
+            page,
+          },
         })
-        console.log(res.data)
+
         if (page === 1) this.movies = res.data.results
         else this.movies.push(...res.data.results)
+
         this.page = res.data.page
         this.total_pages = res.data.total_pages
       } catch (err) {
@@ -47,12 +55,20 @@ export const useMoviesStore = defineStore('movies', {
       this.loading = true
       this.error = null
       try {
-        const res = await api.get(`${BASE_URL}/discover/tv?include_adult=false&include_null_first_air_dates=false&language=en-US&page=1&sort_by=popularity.desc'`, {
-          params: { api_key: API_KEY, language: 'pt-BR', page },
+        const res = await api.get(`${BASE_URL}/discover/tv`, {
+          params: {
+            api_key: API_KEY,
+            language: 'pt-BR',
+            include_adult: false,
+            include_null_first_air_dates: false,
+            sort_by: 'popularity.desc',
+            page,
+          },
         })
-        console.log("Séries", res.data)
+
         if (page === 1) this.series = res.data.results
         else this.series.push(...res.data.results)
+
         this.page = res.data.page
         this.total_pages = res.data.total_pages
       } catch (err) {
@@ -67,11 +83,19 @@ export const useMoviesStore = defineStore('movies', {
       this.error = null
       this.query = query
       try {
-        const res = await api.get(`${BASE_URL}/keyword/keyword_id/movie s?include_adult=false&language=en-US&page=1'`, {
-          params: { api_key: API_KEY, language: 'pt-BR', query, page },
+        const res = await api.get(`${BASE_URL}/search/movie`, {
+          params: {
+            api_key: API_KEY,
+            language: 'pt-BR',
+            query,
+            page,
+            include_adult: false,
+          },
         })
+
         if (page === 1) this.movies = res.data.results
         else this.movies.push(...res.data.results)
+
         this.page = res.data.page
         this.total_pages = res.data.total_pages
       } catch (err) {
@@ -87,10 +111,18 @@ export const useMoviesStore = defineStore('movies', {
       this.query = query
       try {
         const res = await api.get(`${BASE_URL}/search/tv`, {
-          params: { api_key: API_KEY, language: 'pt-BR', query, page },
+          params: {
+            api_key: API_KEY,
+            language: 'pt-BR',
+            query,
+            page,
+            include_adult: false,
+          },
         })
+
         if (page === 1) this.series = res.data.results
         else this.series.push(...res.data.results)
+
         this.page = res.data.page
         this.total_pages = res.data.total_pages
       } catch (err) {
@@ -111,18 +143,19 @@ export const useMoviesStore = defineStore('movies', {
             append_to_response: 'credits,videos',
           },
         })
+
         this.movieDetails = {
           id: res.data.id,
           titulo: res.data.title,
           descricao: res.data.overview,
           lancamento: res.data.release_date,
           duracao: res.data.runtime,
-          generos: res.data.genres.map(g => g.name),
+          generos: res.data.genres.map((g) => g.name),
           nota: res.data.vote_average,
           poster: res.data.poster_path,
           backdrop: res.data.backdrop_path,
-          atores: res.data.credits.cast.slice(0, 5).map(a => a.name),
-          trailer: res.data.videos.results.find(v => v.type === 'Trailer')?.key || null,
+          atores: res.data.credits.cast.slice(0, 5).map((a) => a.name),
+          trailer: res.data.videos.results.find((v) => v.type === 'Trailer')?.key || null,
         }
       } catch (err) {
         this.error = err.response?.data?.status_message || err.message
@@ -142,6 +175,7 @@ export const useMoviesStore = defineStore('movies', {
             append_to_response: 'credits,videos',
           },
         })
+
         this.seriesDetails = {
           id: res.data.id,
           titulo: res.data.name,
@@ -149,12 +183,12 @@ export const useMoviesStore = defineStore('movies', {
           lancamento: res.data.first_air_date,
           temporadas: res.data.number_of_seasons,
           episodios: res.data.number_of_episodes,
-          generos: res.data.genres.map(g => g.name),
+          generos: res.data.genres.map((g) => g.name),
           nota: res.data.vote_average,
           poster: res.data.poster_path,
           backdrop: res.data.backdrop_path,
-          atores: res.data.credits.cast.slice(0, 5).map(a => a.name),
-          trailer: res.data.videos.results.find(v => v.type === 'Trailer')?.key || null,
+          atores: res.data.credits.cast.slice(0, 5).map((a) => a.name),
+          trailer: res.data.videos.results.find((v) => v.type === 'Trailer')?.key || null,
         }
       } catch (err) {
         this.error = err.response?.data?.status_message || err.message
@@ -166,6 +200,7 @@ export const useMoviesStore = defineStore('movies', {
     async loadMore(contentType = 'movie') {
       if (this.loading || !this.hasMore) return
       const nextPage = this.page + 1
+
       if (contentType === 'movie') {
         if (this.query) await this.searchMovies(this.query, nextPage)
         else await this.fetchPopularMovies(nextPage)

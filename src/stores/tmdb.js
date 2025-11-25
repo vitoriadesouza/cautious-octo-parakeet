@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { api } from '@/plugins/axios'
+import api from '@/plugins/axios'
+import UpcomingMoviesView from '@/views/UpcomingMoviesView.vue'
 
 const API_KEY = import.meta.env.VITE_API_KEY
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://api.themoviedb.org/3'
@@ -8,6 +9,7 @@ export const useMoviesStore = defineStore('movies', {
   state: () => ({
     movies: [],
     series: [],
+    UpcomingMovies: [],
     movieDetails: {},
     seriesDetails: {},
     page: 1,
@@ -24,32 +26,57 @@ export const useMoviesStore = defineStore('movies', {
   },
 
   actions: {
-    async fetchPopularMovies(page = 1) {
-      this.loading = true
-      this.error = null
-      try {
-        const res = await api.get(`${BASE_URL}/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc`, {
-          params: {
-            api_key: API_KEY,
-            language: 'pt-BR',
-            include_adult: true,
-            include_video: false,
-            sort_by: 'popularity.desc',
-            page,
-          },
-        })
 
-        if (page === 1) this.movies = res.data.results
-        else this.movies.push(...res.data.results)
+    async fetchUpcomingMovies(page = 1) {
+  this.loading = true
+  this.error = null
+  try {
+    const res = await api.get(`${BASE_URL}/movie/upcoming`, {
+      params: {
+        api_key: API_KEY,
+        language: 'pt-BR',
+        page,
+        region: 'BR',
+      },
+    })
 
-        this.page = res.data.page
-        this.total_pages = res.data.total_pages
-      } catch (err) {
-        this.error = err.response?.data?.status_message || err.message
-      } finally {
-        this.loading = false
-      }
+    if (page === 1) this.upcomingMovies = res.data.results
+    else this.upcomingMovies.push(...res.data.results)
+
+    this.page = res.data.page
+    this.total_pages = res.data.total_pages
+  } catch (err) {
+    this.error = err.response?.data?.status_message || err.message
+  } finally {
+    this.loading = false
+  }
+}
+
     },
+
+    async fetchPopularMovies(page = 1) {
+  this.loading = true
+  this.error = null
+  try {
+    const res = await api.get(`${BASE_URL}/movie/popular`, {
+      params: {
+        api_key: API_KEY,
+        language: 'pt-BR',
+        page,
+      },
+    })
+
+    if (page === 1) this.movies = res.data.results
+    else this.movies.push(...res.data.results)
+
+    this.page = res.data.page
+    this.total_pages = res.data.total_pages
+  } catch (err) {
+    this.error = err.response?.data?.status_message || err.message
+  } finally {
+    this.loading = false
+  }
+},
 
     async fetchPopularSeries(page = 1) {
       this.loading = true
@@ -77,6 +104,30 @@ export const useMoviesStore = defineStore('movies', {
         this.loading = false
       }
     },
+
+  async fetchPopularMovies(page = 1) {
+  this.loading = true
+  this.error = null
+  try {
+    const res = await api.get(`${BASE_URL}/movie/popular`, {
+      params: {
+        api_key: API_KEY,
+        language: 'pt-BR',
+        page,
+      },
+    })
+
+    if (page === 1) this.movies = res.data.results
+    else this.movies.push(...res.data.results)
+
+    this.page = res.data.page
+    this.total_pages = res.data.total_pages
+  } catch (err) {
+    this.error = err.response?.data?.status_message || err.message
+  } finally {
+    this.loading = false
+  }
+},
 
     async searchMovies(query, page = 1) {
       this.loading = true
@@ -203,7 +254,7 @@ export const useMoviesStore = defineStore('movies', {
 
       if (contentType === 'movie') {
         if (this.query) await this.searchMovies(this.query, nextPage)
-        else await this.fetchPopularMovies(nextPage)
+        else await this.fetchUpcomingMovies(nextPage) // 👈 ALTERADO AQUI
       } else {
         if (this.query) await this.searchSeries(this.query, nextPage)
         else await this.fetchPopularSeries(nextPage)
@@ -222,4 +273,4 @@ export const useMoviesStore = defineStore('movies', {
       this.seriesDetails = {}
     },
   },
-})
+)

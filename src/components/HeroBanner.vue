@@ -1,7 +1,6 @@
 <template>
   <section class="hero" v-if="item">
     <div class="video-wrap" v-if="youtubeKey">
-      <!-- YouTube iframe as background video -->
       <iframe
         class="bg-video"
         :src="youtubeSrc"

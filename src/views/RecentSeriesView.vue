@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <h1>Séries Recentes</h1>
+    <h1>Séries</h1>
 
     <div v-if="moviesStore.loading" class="loading">Carregando...</div>
     <div v-else class="grid">

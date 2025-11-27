@@ -142,16 +142,16 @@ async function fetchRecentSeries(){
   }catch(e){ console.error(e) }
 }
 
-onMounted(async () => {
-  await Promise.all([
-    store.fetchPopularSeries(1),
-    fetchRecommended(),
-    fetchUpcoming(),
-    fetchRecentSeries(),
-    fetchTop10(),
-  ])
-  await pickRandomHighlight()
-})
+  onMounted(async () => {
+    await Promise.all([
+      store.fetchPopularSeries(1),
+      fetchRecommended(),
+      fetchUpcoming(),
+      fetchRecentSeries(),
+      fetchTop10(),
+    ])
+    await pickRandomHighlight()
+  })
 </script>
 
 <style scoped>

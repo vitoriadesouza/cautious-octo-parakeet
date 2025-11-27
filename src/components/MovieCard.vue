@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="movie-card">
     <div class="poster" :style="{ backgroundImage: 'url(' + posterUrl + ')' }">
       <span class="badge">{{ typeLabel }}</span>
       <div class="big-number" v-if="rank">{{ rank }}</div>
@@ -30,24 +30,23 @@ const typeLabel = props.type === 'tv' || props.item.media_type === 'tv' ? 'SÉRI
 </script>
 
 <style scoped>
-.card{ width:220px; margin-right:18px; color:#fff; }
-.poster{
-  height:330px;
-  border-radius:18px;
-  background-size:cover;
-  background-position:center;
-  position:relative;
-  overflow:hidden;
+.movie-card {
+  width: 220px;
+  min-width: 220px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.poster {
+  width: 220px;
+  height: 330px;
+  border-radius: 18px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.7);
 }
-.badge{ position:absolute; top:12px; left:12px; background:rgba(0,0,0,0.6); padding:6px 8px; border-radius:8px; font-size:12px; font-weight:700; }
-.big-number{
-  position:absolute; right: -20px; bottom: -20px; font-size:140px; font-weight:800; color:rgba(255,255,255,0.95);
-  text-shadow: 0 8px 30px rgba(0,0,0,0.8);
-  transform: rotate(0deg);
-  pointer-events:none;
-}
-.meta{ margin-top:12px; }
-.name{ font-size:16px; margin:0 0 6px 0; font-weight:700; }
-.bottom{ font-size:13px; color:rgba(255,255,255,0.75); display:flex; gap:8px; align-items:center; }
+
+
 </style>

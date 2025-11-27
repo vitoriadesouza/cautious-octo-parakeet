@@ -12,7 +12,6 @@
     <div class="right">
       <button class="btn icon">🔍</button>
       <button class="btn icon">🔀 Aleatório</button>
-      <router-link to="/account" class="account-btn">Minha Conta</router-link>
     </div>
   </header>
 </template>

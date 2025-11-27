@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import api from '@/plugins/axios'
-import UpcomingMoviesView from '@/views/UpcomingMoviesView.vue'
 
 const API_KEY = import.meta.env.VITE_API_KEY
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://api.themoviedb.org/3'
@@ -9,7 +8,7 @@ export const useMoviesStore = defineStore('movies', {
   state: () => ({
     movies: [],
     series: [],
-    UpcomingMovies: [],
+    upcomingMovies: [],
     movieDetails: {},
     seriesDetails: {},
     page: 1,
@@ -27,74 +26,24 @@ export const useMoviesStore = defineStore('movies', {
 
   actions: {
 
+    // --------------------
+    // FILMES PRÓXIMOS
+    // --------------------
     async fetchUpcomingMovies(page = 1) {
-  this.loading = true
-  this.error = null
-  try {
-    const res = await api.get(`${BASE_URL}/movie/upcoming`, {
-      params: {
-        api_key: API_KEY,
-        language: 'pt-BR',
-        page,
-        region: 'BR',
-      },
-    })
-
-    if (page === 1) this.upcomingMovies = res.data.results
-    else this.upcomingMovies.push(...res.data.results)
-
-    this.page = res.data.page
-    this.total_pages = res.data.total_pages
-  } catch (err) {
-    this.error = err.response?.data?.status_message || err.message
-  } finally {
-    this.loading = false
-  }
-}
-
-    },
-
-    async fetchPopularMovies(page = 1) {
-  this.loading = true
-  this.error = null
-  try {
-    const res = await api.get(`${BASE_URL}/movie/popular`, {
-      params: {
-        api_key: API_KEY,
-        language: 'pt-BR',
-        page,
-      },
-    })
-
-    if (page === 1) this.movies = res.data.results
-    else this.movies.push(...res.data.results)
-
-    this.page = res.data.page
-    this.total_pages = res.data.total_pages
-  } catch (err) {
-    this.error = err.response?.data?.status_message || err.message
-  } finally {
-    this.loading = false
-  }
-},
-
-    async fetchPopularSeries(page = 1) {
       this.loading = true
       this.error = null
       try {
-        const res = await api.get(`${BASE_URL}/discover/tv`, {
+        const res = await api.get(`${BASE_URL}/movie/upcoming`, {
           params: {
             api_key: API_KEY,
             language: 'pt-BR',
-            include_adult: false,
-            include_null_first_air_dates: false,
-            sort_by: 'popularity.desc',
             page,
+            region: 'BR',
           },
         })
 
-        if (page === 1) this.series = res.data.results
-        else this.series.push(...res.data.results)
+        if (page === 1) this.upcomingMovies = res.data.results
+        else this.upcomingMovies.push(...res.data.results)
 
         this.page = res.data.page
         this.total_pages = res.data.total_pages
@@ -105,11 +54,41 @@ export const useMoviesStore = defineStore('movies', {
       }
     },
 
-  async fetchPopularMovies(page = 1) {
+    // --------------------
+    // FILMES POPULARES
+    // --------------------
+    async fetchPopularMovies(page = 1) {
+      this.loading = true
+      this.error = null
+      try {
+        const res = await api.get(`${BASE_URL}/movie/popular`, {
+          params: {
+            api_key: API_KEY,
+            language: 'pt-BR',
+            page,
+          },
+        })
+
+        if (page === 1) this.movies = res.data.results
+        else this.movies.push(...res.data.results)
+
+        this.page = res.data.page
+        this.total_pages = res.data.total_pages
+      } catch (err) {
+        this.error = err.response?.data?.status_message || err.message
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // --------------------
+// SÉRIES POPULARES
+// --------------------
+async fetchPopularSeries(page = 1) {
   this.loading = true
   this.error = null
   try {
-    const res = await api.get(`${BASE_URL}/movie/popular`, {
+    const res = await api.get(`${BASE_URL}/tv/popular`, {
       params: {
         api_key: API_KEY,
         language: 'pt-BR',
@@ -117,8 +96,8 @@ export const useMoviesStore = defineStore('movies', {
       },
     })
 
-    if (page === 1) this.movies = res.data.results
-    else this.movies.push(...res.data.results)
+    if (page === 1) this.series = res.data.results
+    else this.series.push(...res.data.results)
 
     this.page = res.data.page
     this.total_pages = res.data.total_pages
@@ -129,6 +108,10 @@ export const useMoviesStore = defineStore('movies', {
   }
 },
 
+
+    // --------------------
+    // BUSCA FILMES
+    // --------------------
     async searchMovies(query, page = 1) {
       this.loading = true
       this.error = null
@@ -156,6 +139,9 @@ export const useMoviesStore = defineStore('movies', {
       }
     },
 
+    // --------------------
+    // BUSCA SÉRIES
+    // --------------------
     async searchSeries(query, page = 1) {
       this.loading = true
       this.error = null
@@ -183,6 +169,9 @@ export const useMoviesStore = defineStore('movies', {
       }
     },
 
+    // --------------------
+    // DETALHES DE FILMES
+    // --------------------
     async fetchMovieDetails(id) {
       this.loading = true
       this.error = null
@@ -215,6 +204,9 @@ export const useMoviesStore = defineStore('movies', {
       }
     },
 
+    // --------------------
+    // DETALHES DE SÉRIES
+    // --------------------
     async fetchSeriesDetails(id) {
       this.loading = true
       this.error = null
@@ -248,13 +240,16 @@ export const useMoviesStore = defineStore('movies', {
       }
     },
 
+    // --------------------
+    // LOAD MORE
+    // --------------------
     async loadMore(contentType = 'movie') {
       if (this.loading || !this.hasMore) return
       const nextPage = this.page + 1
 
       if (contentType === 'movie') {
         if (this.query) await this.searchMovies(this.query, nextPage)
-        else await this.fetchUpcomingMovies(nextPage) // 👈 ALTERADO AQUI
+        else await this.fetchUpcomingMovies(nextPage)
       } else {
         if (this.query) await this.searchSeries(this.query, nextPage)
         else await this.fetchPopularSeries(nextPage)
@@ -272,5 +267,6 @@ export const useMoviesStore = defineStore('movies', {
       this.movieDetails = {}
       this.seriesDetails = {}
     },
+
   },
-)
+})

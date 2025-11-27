@@ -27,12 +27,6 @@ const router = createRouter({
       name: 'series',
       component: () => import('../views/SeriesView.vue')
     },
-
-    {
-      path: '/series/recent',
-      name: 'recent-series',
-      component: () => import('../views/RecentSeriesView.vue')
-    },
   ],
 })
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="movie-card">
+  <div class="movie-card" @click="goToDetails">
     <div class="poster" :style="{ backgroundImage: 'url(' + posterUrl + ')' }">
       <span class="badge">{{ typeLabel }}</span>
       <div class="big-number" v-if="rank">{{ rank }}</div>
@@ -15,18 +15,40 @@
 </template>
 
 <script setup>
+import { useRouter } from "vue-router"
+
+const router = useRouter()
+
 const props = defineProps({
   item: { type: Object, required: true },
-  type: { type: String, default: 'movie' },
+  type: { type: String, default: "movie" },
   rank: { type: [Number, null], default: null },
 })
 
-const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
-const posterUrl = props.item.poster_path ? (IMAGE_BASE + props.item.poster_path) : (IMAGE_BASE + props.item.backdrop_path || '')
-const displayTitle = props.item.title || props.item.name || props.item.titulo || '—'
-const year = (props.item.release_date || props.item.first_air_date || '').slice(0,4)
+const IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
+
+const posterUrl = props.item.poster_path
+  ? IMAGE_BASE + props.item.poster_path
+  : IMAGE_BASE + props.item.backdrop_path || ""
+
+const displayTitle =
+  props.item.title ||
+  props.item.name ||
+  props.item.titulo ||
+  "—"
+
+const year = (props.item.release_date || props.item.first_air_date || "").slice(0, 4)
 const runtime = props.item.runtime || null
-const typeLabel = props.type === 'tv' || props.item.media_type === 'tv' ? 'SÉRIE' : 'FILME'
+const typeLabel =
+  props.type === "tv" || props.item.media_type === "tv" ? "SÉRIE" : "FILME"
+
+function goToDetails() {
+  if (typeLabel === "SÉRIE") {
+    router.push(`/series/${props.item.id}`)
+  } else {
+    router.push(`/movie/${props.item.id}`)
+  }
+}
 </script>
 
 <style scoped>
@@ -35,6 +57,12 @@ const typeLabel = props.type === 'tv' || props.item.media_type === 'tv' ? 'SÉRI
   min-width: 220px;
   color: #fff;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.movie-card:hover {
+  transform: scale(1.06);
 }
 
 .poster {
@@ -47,6 +75,4 @@ const typeLabel = props.type === 'tv' || props.item.media_type === 'tv' ? 'SÉRI
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.7);
 }
-
-
 </style>

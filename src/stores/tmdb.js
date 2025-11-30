@@ -26,9 +26,6 @@ export const useMoviesStore = defineStore('movies', {
 
   actions: {
 
-    // --------------------
-    // FILMES PRÓXIMOS
-    // --------------------
     async fetchUpcomingMovies(page = 1) {
       this.loading = true
       this.error = null
@@ -53,10 +50,6 @@ export const useMoviesStore = defineStore('movies', {
         this.loading = false
       }
     },
-
-    // --------------------
-    // FILMES POPULARES
-    // --------------------
     async fetchPopularMovies(page = 1) {
       this.loading = true
       this.error = null
@@ -81,9 +74,6 @@ export const useMoviesStore = defineStore('movies', {
       }
     },
 
-    // --------------------
-// SÉRIES POPULARES
-// --------------------
 async fetchPopularSeries(page = 1) {
   this.loading = true
   this.error = null
@@ -108,10 +98,6 @@ async fetchPopularSeries(page = 1) {
   }
 },
 
-
-    // --------------------
-    // BUSCA FILMES
-    // --------------------
     async searchMovies(query, page = 1) {
       this.loading = true
       this.error = null

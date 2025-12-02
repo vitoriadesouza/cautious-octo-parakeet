@@ -7,28 +7,83 @@ const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://api.themoviedb.org/3'
 export const useMoviesStore = defineStore('movies', {
   state: () => ({
     movies: [],
-    series: [],
     upcomingMovies: [],
     movieDetails: {},
+    series: [],
     seriesDetails: {},
-    page: 1,
-    total_pages: 0,
+    moviePage: 1,
+    movieTotalPages: 0,
+    seriesPage: 1,
+    seriesTotalPages: 0,
+    upcomingPage: 1,
+    upcomingTotalPages: 0,
+    query: '',
     loading: false,
     error: null,
-    query: '',
   }),
 
   getters: {
-    hasMore: (state) => state.page < state.total_pages,
-    totalMovies: (state) => state.movies.length,
-    totalSeries: (state) => state.series.length,
+    hasMoreMovies: (s) => s.moviePage < s.movieTotalPages,
+    hasMoreSeries: (s) => s.seriesPage < s.seriesTotalPages,
+    hasMoreUpcoming: (s) => s.upcomingPage < s.upcomingTotalPages,
   },
 
   actions: {
+    async fetchPopularMovies(page = 1) {
+      this.loading = true
+      this.error = null
+      try {
+        const res = await api.get(`${BASE_URL}/movie/popular`, {
+          params: { api_key: API_KEY, language: 'pt-BR', page },
+        })
 
-    // --------------------
-    // FILMES PRÓXIMOS
-    // --------------------
+        if (page === 1) this.movies = res.data.results
+        else this.movies.push(...res.data.results)
+
+        this.moviePage = res.data.page
+        this.movieTotalPages = res.data.total_pages
+      } catch (err) {
+        this.error = err.response?.data?.status_message || err.message
+      } finally {
+        this.loading = false
+      }
+    },
+
+async fetchRecentSeries(page = 1) {
+  this.loading = true;
+  this.error = null;
+
+  try {
+    const res = await api.get(`${BASE_URL}/discover/tv`, {
+      params: {
+        api_key: API_KEY,
+        language: "pt-BR",
+        sort_by: "popularity.desc",
+        "first_air_date.gte": "2010-01-01",
+        "first_air_date.lte": new Date().toISOString().slice(0, 10),
+        "vote_average.gte": 7,
+        "vote_count.gte": 500,
+        with_origin_country: "US|GB|BR",
+        page,
+      },
+    });
+
+    const cleanResults = res.data.results.filter(
+      s => s.poster_path && s.first_air_date
+    );
+
+    if (page === 1) this.series = cleanResults;
+    else this.series.push(...cleanResults);
+
+    this.seriesPage = res.data.page;
+    this.seriesTotalPages = res.data.total_pages;
+  } catch (err) {
+    this.error = err.response?.data?.status_message || err.message;
+  } finally {
+    this.loading = false;
+  }
+},
+
     async fetchUpcomingMovies(page = 1) {
       this.loading = true
       this.error = null
@@ -45,73 +100,14 @@ export const useMoviesStore = defineStore('movies', {
         if (page === 1) this.upcomingMovies = res.data.results
         else this.upcomingMovies.push(...res.data.results)
 
-        this.page = res.data.page
-        this.total_pages = res.data.total_pages
+        this.upcomingPage = res.data.page
+        this.upcomingTotalPages = res.data.total_pages
       } catch (err) {
         this.error = err.response?.data?.status_message || err.message
       } finally {
         this.loading = false
       }
     },
-
-    // --------------------
-    // FILMES POPULARES
-    // --------------------
-    async fetchPopularMovies(page = 1) {
-      this.loading = true
-      this.error = null
-      try {
-        const res = await api.get(`${BASE_URL}/movie/popular`, {
-          params: {
-            api_key: API_KEY,
-            language: 'pt-BR',
-            page,
-          },
-        })
-
-        if (page === 1) this.movies = res.data.results
-        else this.movies.push(...res.data.results)
-
-        this.page = res.data.page
-        this.total_pages = res.data.total_pages
-      } catch (err) {
-        this.error = err.response?.data?.status_message || err.message
-      } finally {
-        this.loading = false
-      }
-    },
-
-    // --------------------
-// SÉRIES POPULARES
-// --------------------
-async fetchPopularSeries(page = 1) {
-  this.loading = true
-  this.error = null
-  try {
-    const res = await api.get(`${BASE_URL}/tv/popular`, {
-      params: {
-        api_key: API_KEY,
-        language: 'pt-BR',
-        page,
-      },
-    })
-
-    if (page === 1) this.series = res.data.results
-    else this.series.push(...res.data.results)
-
-    this.page = res.data.page
-    this.total_pages = res.data.total_pages
-  } catch (err) {
-    this.error = err.response?.data?.status_message || err.message
-  } finally {
-    this.loading = false
-  }
-},
-
-
-    // --------------------
-    // BUSCA FILMES
-    // --------------------
     async searchMovies(query, page = 1) {
       this.loading = true
       this.error = null
@@ -130,8 +126,8 @@ async fetchPopularSeries(page = 1) {
         if (page === 1) this.movies = res.data.results
         else this.movies.push(...res.data.results)
 
-        this.page = res.data.page
-        this.total_pages = res.data.total_pages
+        this.moviePage = res.data.page
+        this.movieTotalPages = res.data.total_pages
       } catch (err) {
         this.error = err.response?.data?.status_message || err.message
       } finally {
@@ -139,9 +135,6 @@ async fetchPopularSeries(page = 1) {
       }
     },
 
-    // --------------------
-    // BUSCA SÉRIES
-    // --------------------
     async searchSeries(query, page = 1) {
       this.loading = true
       this.error = null
@@ -160,8 +153,8 @@ async fetchPopularSeries(page = 1) {
         if (page === 1) this.series = res.data.results
         else this.series.push(...res.data.results)
 
-        this.page = res.data.page
-        this.total_pages = res.data.total_pages
+        this.seriesPage = res.data.page
+        this.seriesTotalPages = res.data.total_pages
       } catch (err) {
         this.error = err.response?.data?.status_message || err.message
       } finally {
@@ -169,9 +162,6 @@ async fetchPopularSeries(page = 1) {
       }
     },
 
-    // --------------------
-    // DETALHES DE FILMES
-    // --------------------
     async fetchMovieDetails(id) {
       this.loading = true
       this.error = null
@@ -190,12 +180,12 @@ async fetchPopularSeries(page = 1) {
           descricao: res.data.overview,
           lancamento: res.data.release_date,
           duracao: res.data.runtime,
-          generos: res.data.genres.map((g) => g.name),
+          generos: res.data.genres.map(g => g.name),
           nota: res.data.vote_average,
           poster: res.data.poster_path,
           backdrop: res.data.backdrop_path,
-          atores: res.data.credits.cast.slice(0, 5).map((a) => a.name),
-          trailer: res.data.videos.results.find((v) => v.type === 'Trailer')?.key || null,
+          atores: res.data.credits.cast.slice(0, 5).map(a => a.name),
+          trailer: res.data.videos.results.find(v => v.type === 'Trailer')?.key || null,
         }
       } catch (err) {
         this.error = err.response?.data?.status_message || err.message
@@ -204,9 +194,6 @@ async fetchPopularSeries(page = 1) {
       }
     },
 
-    // --------------------
-    // DETALHES DE SÉRIES
-    // --------------------
     async fetchSeriesDetails(id) {
       this.loading = true
       this.error = null
@@ -226,12 +213,12 @@ async fetchPopularSeries(page = 1) {
           lancamento: res.data.first_air_date,
           temporadas: res.data.number_of_seasons,
           episodios: res.data.number_of_episodes,
-          generos: res.data.genres.map((g) => g.name),
+          generos: res.data.genres.map(g => g.name),
           nota: res.data.vote_average,
           poster: res.data.poster_path,
           backdrop: res.data.backdrop_path,
-          atores: res.data.credits.cast.slice(0, 5).map((a) => a.name),
-          trailer: res.data.videos.results.find((v) => v.type === 'Trailer')?.key || null,
+          atores: res.data.credits.cast.slice(0, 5).map(a => a.name),
+          trailer: res.data.videos.results.find(v => v.type === 'Trailer')?.key || null,
         }
       } catch (err) {
         this.error = err.response?.data?.status_message || err.message
@@ -240,33 +227,82 @@ async fetchPopularSeries(page = 1) {
       }
     },
 
-    // --------------------
-    // LOAD MORE
-    // --------------------
-    async loadMore(contentType = 'movie') {
-      if (this.loading || !this.hasMore) return
-      const nextPage = this.page + 1
+    async loadMore(type = 'movie') {
+      if (this.loading) return
 
-      if (contentType === 'movie') {
-        if (this.query) await this.searchMovies(this.query, nextPage)
-        else await this.fetchUpcomingMovies(nextPage)
-      } else {
-        if (this.query) await this.searchSeries(this.query, nextPage)
-        else await this.fetchPopularSeries(nextPage)
+      if (type === 'movie') {
+        const next = this.moviePage + 1
+        if (next <= this.movieTotalPages) {
+          if (this.query) return this.searchMovies(this.query, next)
+          return this.fetchPopularMovies(next)
+        }
       }
+
+      if (type === 'series') {
+        const next = this.seriesPage + 1
+        if (next <= this.seriesTotalPages) {
+          if (this.query) return this.searchSeries(this.query, next)
+          return this.fetchPopularSeries(next)
+        }
+      }
+
+      if (type === 'upcoming') {
+        const next = this.upcomingPage + 1
+        if (next <= this.upcomingTotalPages) {
+          return this.fetchUpcomingMovies(next)
+        }
+      }
+
     },
+async fetchMovieVideos(id) {
+  try {
+    const res = await api.get(`${BASE_URL}/movie/${id}/videos`, {
+      params: {
+        api_key: API_KEY,
+        language: "pt-BR",
+      },
+    });
+    return res.data.results;
+  } catch (err) {
+    console.warn("Erro ao carregar vídeos do filme:", err);
+    return [];
+  }
+},
+
+async fetchSeriesVideos(id) {
+  try {
+    const res = await api.get(`${BASE_URL}/tv/${id}/videos`, {
+      params: {
+        api_key: API_KEY,
+        language: "pt-BR",
+      },
+    });
+    return res.data.results;
+  } catch (err) {
+    console.warn("Erro ao carregar vídeos da série:", err);
+    return [];
+  }
+},
+
 
     clear() {
       this.movies = []
       this.series = []
-      this.page = 1
-      this.total_pages = 0
-      this.loading = false
-      this.error = null
+      this.upcomingMovies = []
+
+      this.moviePage = 1
+      this.seriesPage = 1
+      this.upcomingPage = 1
+
+      this.movieTotalPages = 0
+      this.seriesTotalPages = 0
+      this.upcomingTotalPages = 0
+
       this.query = ''
       this.movieDetails = {}
       this.seriesDetails = {}
+      this.error = null
+      this.loading = false
     },
-
   },
 })

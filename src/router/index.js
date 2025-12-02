@@ -1,33 +1,43 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+
+import HomeView from '@/views/HomeView.vue'
+import MoviesPage from '@/views/MoviesView.vue'
+import SeriesPage from '@/views/SeriesView.vue'
+import MovieDetailsView from '@/views/MovieDetailsView.vue'
+import SeriesDetailsView from '@/views/SeriesDetailsView.vue'
+import ActorDetailsView from '@/views/ActorView.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes: [
-    {
-      path: '/',
+    { path: '/',
       name: 'home',
-      component: HomeView
-    },
+      component: HomeView },
 
-    {
-      path: '/movies',
+
+    { path: '/movies',
       name: 'movies',
-      component: () => import('../views/MoviesView.vue')
-    },
+      component: MoviesPage },
 
-    {
-      path: '/movies/upcoming',
-      name: 'movies-upcoming',
-      component: () => import('../views/UpcomingMoviesView.vue')
-    },
 
-    {
-      path: '/series',
+    { path: '/movie/:id',
+      name: 'movie-details',
+      component: MovieDetailsView },
+
+    { path: '/series',
       name: 'series',
-      component: () => import('../views/SeriesView.vue')
-    },
-  ],
+      component: SeriesPage },
+
+
+    { path: '/series/:id',
+      name: 'series-details',
+      component: SeriesDetailsView },
+
+
+    { path: '/actor/:id',
+      name: 'actor-details',
+      component: ActorDetailsView },
+  ]
 })
 
 export default router

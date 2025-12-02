@@ -9,7 +9,7 @@
       @next="pickRandomHighlight"
     />
 
-    <!-- Recomendados -->
+
     <CarouselRow
       title="Recomendados para você"
       :items="recommended"
@@ -17,33 +17,31 @@
     />
 
     <section class="top10" v-if="top10 && top10.length">
-  <div class="top10-header">
-    <h2>Top 10 de hoje no Brasil</h2>
-  </div>
-  <div class="top10-list">
-    <MovieCard
-      v-for="(it, idx) in top10"
-      :key="it.id"
-      :item="it"
-      :rank="idx + 1"
+      <div class="top10-header">
+        <h2>Top de hoje no Brasil</h2>
+      </div>
+      <div class="top10-list">
+        <MovieCard
+          v-for="(it, idx) in top10"
+          :key="it.id"
+          :item="it"
+          :rank="idx + 1"
+        />
+      </div>
+    </section>
+
+    <CarouselRow
+      title="Em breve nos cinemas"
+      :items="recentMovies"
+      see-all-link="/movies/upcoming"
     />
-  </div>
-</section>
-
-
-    <!-- Próximos lançamentos -->
-<CarouselRow
-  title="Em breve nos cinemas"
-  :items="recentMovies"
-  see-all-link="/movies/upcoming"
-/>
-
 
     <CarouselRow
       title="Séries recentes"
       :items="recentSeries"
-      see-all-link="/series/recent"
+      see-all-link="/series"
     />
+    <FooterGTM></FooterGTM>
   </div>
 </template>
 
@@ -55,21 +53,20 @@ import CarouselRow from '@/components/CarrosselRow.vue'
 import MovieCard from '@/components/MovieCard.vue'
 import { useMoviesStore } from '@/stores/tmdb.js'
 import api from '@/plugins/axios'
-
+import FooterGTM from '@/components/FooterGTM.vue'
 
 const API_KEY = import.meta.env.VITE_API_KEY
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://api.themoviedb.org/3'
-const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
 
 const store = useMoviesStore()
 
-const highlight = ref(null) // { type:'movie'|'tv', ...data, trailer: 'YTkey' }
+const highlight = ref(null)
 const recentMovies = ref([])
 const recentSeries = ref([])
 const recommended = ref([])
 const top10 = ref([])
 
-async function fetchTop10(){
+async function fetchTop10() {
   try {
     const res = await api.get(`${BASE_URL}/trending/movie/day`, {
       params: {
@@ -78,38 +75,68 @@ async function fetchTop10(){
       }
     })
     top10.value = res.data.results.slice(0, 10)
-  } catch (e){
-    console.error("top10 err", e)
+  } catch (e) {
+    console.error("Erro no Top10:", e)
   }
 }
 
-async function pickRandomHighlight(){
-  // fetch popular movies + series if not loaded
+
+async function pickRandomHighlight() {
   if (!store.movies.length) await store.fetchPopularMovies(1)
-  if (!store.series.length) await store.fetchPopularSeries(1)
+  if (!store.series.length) await store.fetchRecentSeries(1)
 
   const candidates = [
-    ...store.movies.map(m => ({ ...m, type:'movie' })),
-    ...store.series.map(s => ({ ...s, type:'tv' }))
+    ...store.movies.map(m => ({ ...m, type: "movie" })),
+    ...store.series.map(s => ({ ...s, type: "tv" }))
   ]
-  if (!candidates.length) return
 
-  const chosen = candidates[Math.floor(Math.random() * candidates.length)]
-  // fetch details for trailer
-  if (chosen.type === 'movie') {
+  const filtered = candidates.filter(i =>
+    i.vote_average >= 6.8 && i.vote_count >= 300
+  )
+
+  const valid = []
+
+  for (const item of filtered) {
+    try {
+      const videos =
+        item.type === "movie"
+          ? await store.fetchMovieVideos(item.id)
+          : await store.fetchSeriesVideos(item.id)
+
+      const trailer = videos.find(v => v.type === "Trailer" && v.site === "YouTube")
+
+      if (trailer) {
+        valid.push({
+          ...item,
+          trailerKey: trailer.key
+        })
+      }
+    } catch (e) {
+      console.warn("Erro verificando trailer:", e)
+    }
+  }
+
+  if (!valid.length) {
+    console.warn("Nenhum item com trailer encontrado.")
+    return
+  }
+
+  const chosen = valid[Math.floor(Math.random() * valid.length)]
+
+  if (chosen.type === "movie") {
     await store.fetchMovieDetails(chosen.id)
-    highlight.value = { ...store.movieDetails, type:'movie', poster_path: chosen.poster_path, backdrop_path: chosen.backdrop_path, trailer: store.movieDetails.trailer }
+    highlight.value = { ...store.movieDetails, type: "movie", trailer: chosen.trailerKey }
   } else {
     await store.fetchSeriesDetails(chosen.id)
-    highlight.value = { ...store.seriesDetails, type:'tv', poster_path: chosen.poster_path, backdrop_path: chosen.backdrop_path, trailer: store.seriesDetails.trailer }
+    highlight.value = { ...store.seriesDetails, type: "tv", trailer: chosen.trailerKey }
   }
 }
 
-async function fetchRecommended(){
-  // Recomendados universais: top by vote_average with minimum votes
-  try{
+
+async function fetchRecommended() {
+  try {
     const res = await api.get(`${BASE_URL}/discover/movie`, {
-      params:{
+      params: {
         api_key: API_KEY,
         language: 'pt-BR',
         sort_by: 'vote_average.desc',
@@ -118,49 +145,46 @@ async function fetchRecommended(){
       }
     })
     recommended.value = res.data.results
-  }catch(e){
-    console.error('recommended err', e)
+  } catch (e) {
+    console.error('Erro recommended:', e)
   }
 }
 
-  async function fetchUpcoming(){
+
+async function fetchUpcoming() {
   await store.fetchUpcomingMovies(1)
   recentMovies.value = store.upcomingMovies
 }
 
-async function fetchRecentSeries(){
-  try{
-    const res = await api.get(`${BASE_URL}/discover/tv`, {
-      params:{
-        api_key: API_KEY,
-        language: 'pt-BR',
-        sort_by: 'first_air_date.desc',
-        page: 1,
-      }
-    })
-    recentSeries.value = res.data.results
-  }catch(e){ console.error(e) }
+
+async function loadRecentSeries() {
+  await store.fetchRecentSeries(1)
+  recentSeries.value = store.series
 }
 
-  onMounted(async () => {
-    await Promise.all([
-      store.fetchPopularSeries(1),
-      fetchRecommended(),
-      fetchUpcoming(),
-      fetchRecentSeries(),
-      fetchTop10(),
-    ])
-    await pickRandomHighlight()
-  })
+
+onMounted(async () => {
+  await Promise.all([
+    fetchRecommended(),
+    fetchUpcoming(),
+    loadRecentSeries(),
+    fetchTop10(),
+    store.fetchPopularMovies(1)
+  ])
+
+  await pickRandomHighlight()
+})
 </script>
 
 <style scoped>
-.home{
+.home {
   background: linear-gradient(180deg, #050505 0%, #000 100%);
-  min-height:100vh;
-  color:#fff;
+  min-height: 100vh;
+  color: #fff;
 }
-.top10{ padding:36px 56px; }
-.top10-header h2{ font-size:32px; margin:0 0 20px 0; display:flex; align-items:center; gap:12px; }
-.top10-list{ display:flex; gap:28px; align-items:flex-end; overflow:hidden; padding-bottom:30px; }
+.top10 { padding: 36px 56px; }
+.top10-header h2 { font-size: 32px; margin: 0 0 20px 0; }
+.top10-list { display: flex; gap: 28px; padding-bottom: 30px; }
+
+
 </style>

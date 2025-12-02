@@ -57,6 +57,7 @@ import { useMoviesStore } from '@/stores/tmdb.js'
 import api from '@/plugins/axios'
 
 
+
 const API_KEY = import.meta.env.VITE_API_KEY
 const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://api.themoviedb.org/3'
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
@@ -128,26 +129,17 @@ async function fetchRecommended(){
   recentMovies.value = store.upcomingMovies
 }
 
-async function fetchRecentSeries(){
-  try{
-    const res = await api.get(`${BASE_URL}/discover/tv`, {
-      params:{
-        api_key: API_KEY,
-        language: 'pt-BR',
-        sort_by: 'first_air_date.desc',
-        page: 1,
-      }
-    })
-    recentSeries.value = res.data.results
-  }catch(e){ console.error(e) }
+async function loadRecentSeries() {
+  await store.fetchRecentSeries(1)
+  recentSeries.value = store.series
 }
+
 
   onMounted(async () => {
     await Promise.all([
-      store.fetchPopularSeries(1),
       fetchRecommended(),
       fetchUpcoming(),
-      fetchRecentSeries(),
+      loadRecentSeries(),
       fetchTop10(),
     ])
     await pickRandomHighlight()

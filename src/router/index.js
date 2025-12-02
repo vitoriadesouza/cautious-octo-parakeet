@@ -42,7 +42,14 @@ const router = createRouter({
       path: '/actor/:id',
       name: 'actor',
       component: () => import('../views/ActorView.vue')
+    },
+    {
+      path: '/series/:id',
+      name: 'series-details',
+      component: () => import('../views/SeriesDetailsView.vue'),
+      props: true
     }
+
   ],
 })
 

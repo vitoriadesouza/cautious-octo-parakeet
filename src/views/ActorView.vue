@@ -1,4 +1,5 @@
 <template>
+<VoltarButton/>
   <div class="actor-page" :style="bgStyle">
     <div class="overlay"></div>
 
@@ -28,18 +29,15 @@
       </div>
     </div>
 
-    <!-- FILMOGRAFIA -->
     <div class="filmography">
       <h2>Filmografia</h2>
 
-      <!-- TABS -->
       <div class="tabs">
         <button :class="{ active: tab === 'all' }" @click="tab = 'all'">Todos</button>
         <button :class="{ active: tab === 'movies' }" @click="tab = 'movies'">Filmes ({{ movies.length }})</button>
         <button :class="{ active: tab === 'series' }" @click="tab = 'series'">Séries ({{ series.length }})</button>
       </div>
 
-      <!-- GRID -->
       <div class="grid">
         <div
           v-for="item in filteredList"
@@ -69,6 +67,8 @@
 <script setup>
 import { ref, onMounted, computed } from "vue"
 import { useRoute } from "vue-router"
+import VoltarButton from '@/components/VoltarButton.vue'
+
 
 const route = useRoute()
 const actor = ref({})
@@ -84,11 +84,9 @@ const BACKDROP = "https://image.tmdb.org/t/p/original"
 onMounted(async () => {
   const id = route.params.id
 
-  // 1. Informações do ator
   const res = await fetch(`${API}/person/${id}?api_key=${KEY}&language=pt-BR`)
   actor.value = await res.json()
 
-  // 2. Filmografia
   const resCredits = await fetch(`${API}/person/${id}/combined_credits?api_key=${KEY}&language=pt-BR`)
   const credits = await resCredits.json()
 

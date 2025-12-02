@@ -3,6 +3,7 @@ import { onMounted, ref, computed } from "vue"
 import { useRoute } from "vue-router"
 import StarRating from "vue-star-rating"
 import router from "@/router"
+import VoltarButton from "@/components/VoltarButton.vue"
 
 const route = useRoute()
 
@@ -50,6 +51,7 @@ function goToActor(id) {
 </script>
 
 <template>
+  <VoltarButton/>
   <div class="details" :style="bgStyle">
     <div class="overlay"></div>
 

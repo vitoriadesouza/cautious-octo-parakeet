@@ -43,12 +43,13 @@ const typeLabel =
   props.type === "tv" || props.item.media_type === "tv" ? "SÉRIE" : "FILME"
 
 function goToDetails() {
-  if (typeLabel === "SÉRIE") {
-    router.push(`/series/${props.item.id}`)
+  if (props.type === "tv") {
+    router.push({ name: "series-details", params: { id: props.item.id } })
   } else {
-    router.push(`/movie/${props.item.id}`)
+    router.push({ name: "movie-details", params: { id: props.item.id } })
   }
 }
+
 </script>
 
 <style scoped>

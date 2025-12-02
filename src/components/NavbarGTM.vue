@@ -46,7 +46,7 @@ const query = ref("")
 const suggestions = ref([])
 
 const API = "https://api.themoviedb.org/3"
-const KEY = import.meta.env.VITE_API
+const KEY = import.meta.env.VITE_API_KEY
 const imageBase = "https://image.tmdb.org/t/p/w92"
 
 async function fetchSuggestions() {

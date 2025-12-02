@@ -15,5 +15,4 @@ onMounted(() => {
 </script>
 
 <style>
-/* nada aqui */
 </style>

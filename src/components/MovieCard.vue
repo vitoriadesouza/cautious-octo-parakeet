@@ -75,5 +75,22 @@ function goToDetails() {
   position: relative;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+  position: relative;
+  z-index: 2; 
 }
+.big-number {
+  position: absolute;
+  left: -16px;
+  bottom: -20px;
+  font-size: 170px;
+  font-weight: 900;
+  color: #ffffff;
+  z-index: 0;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+
+
 </style>

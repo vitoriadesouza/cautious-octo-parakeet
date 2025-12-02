@@ -4,6 +4,7 @@ import { useRoute } from "vue-router"
 import StarRating from "vue-star-rating"
 import router from "@/router"
 import VoltarButton from "@/components/VoltarButton.vue"
+import FooterGTM from "@/components/FooterGTM.vue"
 
 const route = useRoute()
 
@@ -46,8 +47,9 @@ function actorImage(path) {
 }
 
 function goToActor(id) {
-  router.push(`/actor/${id}`)
+  router.push({ name: "actor-details", params: { id } })
 }
+
 </script>
 
 <template>
@@ -56,22 +58,15 @@ function goToActor(id) {
     <div class="overlay"></div>
 
     <div class="content">
-
-      <!-- Poster -->
       <img class="poster" :src="posterUrl" alt="" />
-
-      <!-- Infos principais -->
       <div class="info">
-
         <h1 class="title">{{ movie.title }}</h1>
-
         <div class="meta">
           <span>{{ year }}</span>
           <span>•</span>
           <span>{{ runtime }} min</span>
         </div>
 
-        <!-- Rating -->
         <div class="rating">
           <StarRating
             :rating="movie.vote_average / 2"
@@ -91,12 +86,10 @@ function goToActor(id) {
       </div>
     </div>
 
-    <!-- Elenco -->
     <div class="cast-section">
       <h2>Elenco</h2>
 
       <div class="cast-list">
-        <!-- FOTO CLICÁVEL -->
         <div
           class="actor"
           v-for="actor in cast"
@@ -111,6 +104,7 @@ function goToActor(id) {
     </div>
 
   </div>
+  <FooterGTM></FooterGTM>
 </template>
 
 <style scoped>

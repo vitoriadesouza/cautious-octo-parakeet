@@ -6,27 +6,17 @@ const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://api.themoviedb.org/3'
 
 export const useMoviesStore = defineStore('movies', {
   state: () => ({
-
-    // FILMES
     movies: [],
     upcomingMovies: [],
     movieDetails: {},
-
-    // SÉRIES
     series: [],
     seriesDetails: {},
-
-    // PAGINAÇÃO SEPARADA
     moviePage: 1,
     movieTotalPages: 0,
-
     seriesPage: 1,
     seriesTotalPages: 0,
-
     upcomingPage: 1,
     upcomingTotalPages: 0,
-
-    // BUSCA
     query: '',
     loading: false,
     error: null,
@@ -39,9 +29,6 @@ export const useMoviesStore = defineStore('movies', {
   },
 
   actions: {
-    // ============================
-    // FILMES POPULARES
-    // ============================
     async fetchPopularMovies(page = 1) {
       this.loading = true
       this.error = null
@@ -62,9 +49,6 @@ export const useMoviesStore = defineStore('movies', {
       }
     },
 
-    // ============================
-// SÉRIES RECENTES (DISCOVER)
-// ============================
 async fetchRecentSeries(page = 1) {
   this.loading = true;
   this.error = null;
@@ -74,12 +58,12 @@ async fetchRecentSeries(page = 1) {
       params: {
         api_key: API_KEY,
         language: "pt-BR",
-        sort_by: "popularity.desc",      // séries mais populares primeiro
+        sort_by: "popularity.desc",
         "first_air_date.gte": "2010-01-01",
         "first_air_date.lte": new Date().toISOString().slice(0, 10),
-        "vote_average.gte": 7,           // nota mínima
-        "vote_count.gte": 500,           // só séries conhecidas
-        with_origin_country: "US|GB|BR", // opcional: restringir (EUA, UK, Brasil)
+        "vote_average.gte": 7,
+        "vote_count.gte": 500,
+        with_origin_country: "US|GB|BR",
         page,
       },
     });
@@ -100,12 +84,6 @@ async fetchRecentSeries(page = 1) {
   }
 },
 
-
-
-
-    // ============================
-    // "EM BREVE" (UPCOMING)
-    // ============================
     async fetchUpcomingMovies(page = 1) {
       this.loading = true
       this.error = null
@@ -130,10 +108,6 @@ async fetchRecentSeries(page = 1) {
         this.loading = false
       }
     },
-
-    // ============================
-    // BUSCA — FILMES
-    // ============================
     async searchMovies(query, page = 1) {
       this.loading = true
       this.error = null
@@ -161,9 +135,6 @@ async fetchRecentSeries(page = 1) {
       }
     },
 
-    // ============================
-    // BUSCA — SÉRIES
-    // ============================
     async searchSeries(query, page = 1) {
       this.loading = true
       this.error = null
@@ -191,9 +162,6 @@ async fetchRecentSeries(page = 1) {
       }
     },
 
-    // ============================
-    // DETALHES — FILME
-    // ============================
     async fetchMovieDetails(id) {
       this.loading = true
       this.error = null
@@ -226,9 +194,6 @@ async fetchRecentSeries(page = 1) {
       }
     },
 
-    // ============================
-    // DETALHES — SÉRIE
-    // ============================
     async fetchSeriesDetails(id) {
       this.loading = true
       this.error = null
@@ -262,9 +227,6 @@ async fetchRecentSeries(page = 1) {
       }
     },
 
-    // ============================
-    // LOAD MORE INTELIGENTE
-    // ============================
     async loadMore(type = 'movie') {
       if (this.loading) return
 
@@ -290,11 +252,39 @@ async fetchRecentSeries(page = 1) {
           return this.fetchUpcomingMovies(next)
         }
       }
-    },
 
-    // ============================
-    // LIMPAR ESTADO
-    // ============================
+    },
+async fetchMovieVideos(id) {
+  try {
+    const res = await api.get(`${BASE_URL}/movie/${id}/videos`, {
+      params: {
+        api_key: API_KEY,
+        language: "pt-BR",
+      },
+    });
+    return res.data.results;
+  } catch (err) {
+    console.warn("Erro ao carregar vídeos do filme:", err);
+    return [];
+  }
+},
+
+async fetchSeriesVideos(id) {
+  try {
+    const res = await api.get(`${BASE_URL}/tv/${id}/videos`, {
+      params: {
+        api_key: API_KEY,
+        language: "pt-BR",
+      },
+    });
+    return res.data.results;
+  } catch (err) {
+    console.warn("Erro ao carregar vídeos da série:", err);
+    return [];
+  }
+},
+
+
     clear() {
       this.movies = []
       this.series = []

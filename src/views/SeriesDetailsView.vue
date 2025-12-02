@@ -5,7 +5,6 @@
   <div class="details" :style="bgStyle">
     <div class="overlay">
       <div class="content">
-        <!-- Poster -->
         <img class="poster" :src="posterUrl" alt="poster" />
 
         <div class="info">
@@ -34,7 +33,6 @@
         </div>
       </div>
 
-      <!-- Elenco -->
       <div class="cast-section" v-if="cast.length">
         <h2>Elenco</h2>
         <div class="cast-list">
@@ -46,7 +44,6 @@
         </div>
       </div>
 
-      <!-- Trailer -->
       <div v-if="trailerKey" class="trailer-box">
         <iframe
           width="100%"
@@ -58,6 +55,7 @@
       </div>
     </div>
   </div>
+  <FooterGTM></FooterGTM>
 </template>
 
 <script setup>
@@ -66,6 +64,7 @@ import { useRoute } from "vue-router";
 import api from "@/plugins/axios";
 import StarRating from "vue-star-rating";
 import VoltarButton from "@/components/VoltarButton.vue";
+import FooterGTM from "@/components/FooterGTM.vue";
 
 
 const route = useRoute();
@@ -109,20 +108,14 @@ function openTrailer() {
 
 async function load() {
   const id = route.params.id;
-
-  // Detalhes
   const d = await api.get(`${BASE_URL}/tv/${id}`, {
     params: { api_key: API_KEY, language: "pt-BR" },
   });
   series.value = d.data;
-
-  // Elenco
   const c = await api.get(`${BASE_URL}/tv/${id}/credits`, {
     params: { api_key: API_KEY, language: "pt-BR" },
   });
   cast.value = c.data.cast;
-
-  // Trailer
   const v = await api.get(`${BASE_URL}/tv/${id}/videos`, {
     params: { api_key: API_KEY, language: "pt-BR" },
   });
@@ -238,7 +231,7 @@ onMounted(load);
   color: white;
 }
 .overlay {
-  background: rgba(0, 0, 0, 0.65); /* mais escuro */
+  background: rgba(0, 0, 0, 0.65); 
   backdrop-filter: blur(2px);
   padding: 40px;
   min-height: 100vh;

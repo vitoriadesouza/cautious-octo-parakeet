@@ -33,7 +33,7 @@ import { computed } from 'vue'
 import { useMoviesStore } from '@/stores/tmdb.js'
 
 const props = defineProps({
-  item: { type: Object, required: true }, // { type: 'movie'|'tv', data: {...}, trailerKey: 'xxx' }
+  item: { type: Object, required: true }, 
 })
 
 const emit = defineEmits(['prev','next'])
@@ -48,7 +48,7 @@ const youtubeSrc = computed(() => {
 })
 
 const itemTitle = computed(() => props.item.titulo || props.item.title || props.item.name || '')
-const itemTypeLabel = computed(() => (props.item.type === 'tv' ? 'Série' : 'Série' /* keeping label as "Série" for similarity */))
+const itemTypeLabel = computed(() => (props.item.type === 'tv' ? 'Série' : 'Série'))
 </script>
 
 <style scoped>

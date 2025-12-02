@@ -1,279 +1,224 @@
 <template>
-  <div class="series-page">
+  <div class="movies-page">
 
-    <!-- 🔍 Barra de busca -->
-    <div class="search-box">
-      <input
-        v-model="search"
-        @input="handleSearch"
-        type="text"
-        placeholder="Buscar série..."
-      />
+    <Navbar />
+
+    <header class="header">
+      <h1>Séries</h1>
+
+      <button class="category-btn" @click="toggleCategories">
+        Categorias ▾
+      </button>
+    </header>
+
+    <div v-if="showCategories" class="categories-panel">
+      <div class="genre"
+        v-for="g in genres"
+        :key="g.id"
+      >
+        <input
+          type="checkbox"
+          :value="g.id"
+          v-model="selectedGenres"
+        >
+        <label>{{ g.name }}</label>
+      </div>
+
+      <button class="apply-btn" @click="applyFilters">
+        Aplicar filtros
+      </button>
     </div>
-
-    <!-- 🎛 Filtros -->
-    <div class="filters">
-
-      <!-- Range de anos duplo -->
-      <div class="range-box">
-        <label>Anos</label>
-        <div class="range-control">
-          <input type="range" v-model="yearMin" min="1950" max="2025" />
-          <input type="range" v-model="yearMax" min="1950" max="2025" />
-        </div>
-        <div class="year-values">{{ yearMin }} - {{ yearMax }}</div>
-      </div>
-
-      <!-- Select de gênero -->
-      <div class="select-box">
-        <label>Gênero</label>
-        <select v-model="selectedGenre">
-          <option value="">Todos</option>
-          <option v-for="g in genres" :key="g.id" :value="g.id">
-            {{ g.name }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Ordenação -->
-      <div class="select-box">
-        <label>Ordenar</label>
-        <select v-model="order">
-          <option value="desc">Mais recentes</option>
-          <option value="asc">Mais antigos</option>
-        </select>
-      </div>
-
-    </div>
-
-    <!-- 📺 Grid de séries -->
     <div class="grid">
       <div
-        class="card"
-        v-for="serie in filteredSeries"
+        class="movie-card"
+        v-for="serie in series"
         :key="serie.id"
+        @click="goToSeries(serie.id)"
       >
         <img
-          :src="serie.poster_path ? `https://image.tmdb.org/t/p/w500${serie.poster_path}` : '/no-image.png'"
-          alt="poster"
+          :src="IMAGE + serie.poster_path"
+          :alt="serie.name"
         />
-
-        <div class="tag">SÉRIE</div>
-        <h3>{{ serie.name }}</h3>
-        <p>{{ serie.first_air_date?.slice(0, 4) || '---' }}</p>
+        <p class="title">{{ serie.name }}</p>
       </div>
     </div>
-
-    <!-- load more -->
-    <div class="load-more" v-if="store.hasMore && !store.loading">
-      <button @click="loadMoreSeries">Carregar mais</button>
-    </div>
-
-    <div class="loading" v-if="store.loading">
-      Carregando...
+    <div class="load-more-container" v-if="hasMore">
+      <button class="load-more-btn" @click="loadMore">
+        Carregar mais
+      </button>
     </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useMoviesStore } from '@/stores/tmdb.js'
-import api from '@/plugins/axios'
+import { ref, onMounted, computed } from "vue"
+import { useRouter } from "vue-router"
+import Navbar from "@/components/NavbarGTM.vue"
+import api from "@/plugins/axios"
 
-const store = useMoviesStore()
+const router = useRouter()
+const IMAGE = "https://image.tmdb.org/t/p/w500"
+const API_KEY = import.meta.env.VITE_API_KEY
+const BASE = "https://api.themoviedb.org/3"
 
-// busca
-const search = ref('')
+const series = ref([])
+const page = ref(1)
+const totalPages = ref(1)
 
-// filtros
-const yearMin = ref(1950)
-const yearMax = ref(2025)
-const selectedGenre = ref('')
-const order = ref('desc')
-
-// lista de gêneros da API
 const genres = ref([])
+const selectedGenres = ref([])
 
-// puxar gêneros
-async function fetchGenres() {
-  const res = await api.get(`/genre/tv/list`, {
-    params: {
-      api_key: import.meta.env.VITE_API_KEY,
-      language: 'pt-BR'
-    }
+const showCategories = ref(false)
+
+function toggleCategories() {
+  showCategories.value = !showCategories.value
+}
+
+async function loadGenres() {
+  const res = await api.get(`${BASE}/genre/tv/list`, {
+    params: { api_key: API_KEY, language: "pt-BR" }
   })
   genres.value = res.data.genres
 }
 
-// carregar séries iniciais
-onMounted(async () => {
-  await Promise.all([
-    store.fetchPopularSeries(1),
-    fetchGenres()
-  ])
-})
+async function loadSeries(reset = false) {
+  const res = await api.get(`${BASE}/discover/tv`, {
+    params: {
+      api_key: API_KEY,
+      language: "pt-BR",
+      page: page.value,
+      with_genres: selectedGenres.value.join(",") || undefined,
+      sort_by: "popularity.desc",
+    }
+  })
 
-// buscar dinamicamente
-function handleSearch() {
-  if (!search.value) {
-    store.fetchPopularSeries(1)
-    return
+  totalPages.value = res.data.total_pages
+
+  if (reset) {
+    series.value = res.data.results
+  } else {
+    series.value.push(...res.data.results)
   }
-
-  store.searchSeries(search.value)
 }
 
-// load more
-function loadMoreSeries() {
-  store.loadMore('series')
+function applyFilters() {
+  page.value = 1
+  loadSeries(true)
 }
 
-// aplicar filtros
-const filteredSeries = computed(() => {
-  return store.series
-    .filter(s => {
-      const year = parseInt(s.first_air_date?.slice(0, 4)) || 0
+function loadMore() {
+  if (page.value < totalPages.value) {
+    page.value++
+    loadSeries()
+  }
+}
 
-      return (
-        year >= yearMin.value &&
-        year <= yearMax.value &&
-        (selectedGenre.value
-          ? s.genre_ids.includes(parseInt(selectedGenre.value))
-          : true)
-      )
-    })
-    .sort((a, b) => {
-      const yearA = parseInt(a.first_air_date?.slice(0, 4)) || 0
-      const yearB = parseInt(b.first_air_date?.slice(0, 4)) || 0
-      return order.value === 'asc' ? yearA - yearB : yearB - yearA
-    })
+function goToSeries(id) {
+  router.push(`/series/${id}`)
+}
+
+const hasMore = computed(() => page.value < totalPages.value)
+
+onMounted(async () => {
+  await loadGenres()
+  await loadSeries(true)
 })
 </script>
 
 <style scoped>
-.series-page {
-  width: 100%;
-  padding: 20px;
-  color: white;
+.movies-page {
+  padding: 30px;
+  color: #fff;
 }
 
-/* busca */
-.search-box input {
-  width: 100%;
-  padding: 14px;
-  border-radius: 8px;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category-btn {
+  background: #e50914;
+  padding: 10px 16px;
   border: none;
-  outline: none;
-  background: #1a1a1a;
-  color: white;
-  font-size: 16px;
-  margin-bottom: 25px;
-}
-
-/* filtros */
-.filters {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin-bottom: 25px;
-}
-
-.select-box,
-.range-box {
-  display: flex;
-  flex-direction: column;
-}
-
-.select-box select {
-  padding: 10px;
-  border-radius: 8px;
-  background: #1a1a1a;
-  color: white;
-  border: none;
-}
-
-/* range duplo */
-.range-control {
-  display: flex;
-  gap: 10px;
-}
-
-.range-control input[type="range"] {
-  width: 130px;
-}
-
-.year-values {
-  margin-top: 5px;
-  font-size: 14px;
-  color: #bbbbbb;
-}
-
-/* grid de cards */
-.grid {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-}
-
-.card {
-  background: #111;
-  padding: 10px;
-  border-radius: 10px;
-  position: relative;
-  transition: 0.2s;
-}
-
-.card:hover {
-  transform: scale(1.05);
-}
-
-.card img {
-  width: 100%;
-  height: 240px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.card .tag {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: red;
-  padding: 4px 8px;
+  font-weight: bold;
+  cursor: pointer;
   border-radius: 6px;
-  font-size: 12px;
+}
+
+.categories-panel {
+  background: #111;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.genre {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.apply-btn {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding: 10px;
+  background: #e50914;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
   font-weight: bold;
 }
 
-.card h3 {
-  margin-top: 10px;
-  font-size: 15px;
-}
-
-.card p {
-  color: #aaa;
-  font-size: 13px;
-}
-
-/* load more */
-.load-more {
+.grid {
   margin-top: 30px;
-  text-align: center;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
 }
 
-.load-more button {
-  padding: 12px 20px;
-  background: #d80a0a;
-  border: none;
-  border-radius: 8px;
-  color: white;
+.movie-card {
   cursor: pointer;
-  font-size: 15px;
+  transition: transform .2s;
 }
 
-.loading {
+.movie-card:hover {
+  transform: scale(1.05);
+}
+
+.movie-card img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.title {
+  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.load-more-container {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 30px;
+}
+
+.load-more-btn {
+  background: #e50914;
+  color: #fff;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.load-more-btn:hover {
+  transform: scale(1.05);
 }
 </style>
